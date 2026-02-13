@@ -2,11 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: [
-      'localhost',
-      'viglxfgxaqtlgfzfkqwf.supabase.co',
-      'placehold.co',
-    ],
     remotePatterns: [
       {
         protocol: 'https',
@@ -19,6 +14,7 @@ const nextConfig = {
       },
     ],
   },
+  turbopack: {},
   webpack: (config) => {
     config.externals = [...(config.externals || []), { canvas: 'canvas' }];
     return config;
