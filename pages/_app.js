@@ -9,7 +9,8 @@ export default function App({ Component, pageProps, router }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#000000" />
         <meta name="description" content="Professional portfolio — Full-Stack Developer & Creative Technologist" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="alternate icon" href="/favicon.ico" />
         <title>Portfolio | Full-Stack Developer</title>
       </Head>
       <AnimatePresence mode="wait">
