@@ -24,11 +24,11 @@ export default function BlogSection({ posts = [] }) {
           >
             {/* Image */}
             <div className="relative h-44 overflow-hidden">
-              <img
+              <Image
                 src={post.image_url || `https://placehold.co/800x400/111111/FF073A?text=${post.title}`}
                 alt={post.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                loading="lazy"
+                fill
+                className="object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
             </div>

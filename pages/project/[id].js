@@ -98,14 +98,14 @@ export default function ProjectDetail({ project }) {
               transition={{ delay: 0.2 }}
               className="mb-12 rounded-2xl overflow-hidden border border-neon-red/20 shadow-2xl"
             >
-              <img
-                src={project.image_url}
-                alt={project.title}
-                className="w-full h-auto"
-                onError={(e) => {
-                  e.target.src = `https://placehold.co/1200x600/111111/FF073A?text=${project.title}`;
-                }}
-              />
+              <div className="relative w-full h-96">
+                <Image
+                  src={project.image_url}
+                  alt={project.title}
+                  fill
+                  className="object-cover"
+                />
+              </div>
             </motion.div>
           )}
 

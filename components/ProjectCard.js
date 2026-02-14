@@ -23,11 +23,11 @@ export default function ProjectCard({ project, index }) {
     >
       {/* Image */}
       <div className="relative h-48 md:h-56 overflow-hidden">
-        <img
+        <Image
           src={project.image_url || `https://placehold.co/600x400/111111/FF073A?text=${project.title}`}
           alt={project.title}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          loading="lazy"
+          fill
+          className="object-cover transition-transform duration-700 group-hover:scale-110"
         />
         {/* Overlay on hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent

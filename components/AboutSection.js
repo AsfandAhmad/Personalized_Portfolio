@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import SectionWrapper from './SectionWrapper';
@@ -33,13 +34,11 @@ export default function AboutSection({ about }) {
 
             {/* Photo container */}
             <div className="relative w-full h-full rounded-2xl overflow-hidden border-2 border-neon-red/30">
-              <img
+              <Image
                 src={photoUrl}
                 alt={name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.src = `https://placehold.co/400x400/111111/FF073A?text=${name.charAt(0)}`;
-                }}
+                fill
+                className="object-cover"
               />
               {/* Overlay gradient */}
               <div className="absolute inset-0 bg-gradient-to-t from-neon-red/20 via-transparent to-transparent" />
