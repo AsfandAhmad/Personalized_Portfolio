@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import { FaGithub, FaExternalLinkAlt, FaArrowLeft, FaCalendar, FaLightbulb } from 'react-icons/fa';

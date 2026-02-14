@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import SectionWrapper from './SectionWrapper';
 import { FaCalendar, FaArrowRight } from 'react-icons/fa';

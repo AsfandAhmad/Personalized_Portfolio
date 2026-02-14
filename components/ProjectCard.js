@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/router';
 import { FaExternalLinkAlt, FaGithub, FaArrowRight } from 'react-icons/fa';
