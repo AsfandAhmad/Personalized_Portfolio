@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import NeonButton from './NeonButton';
@@ -6,7 +6,7 @@ import {
   FaProjectDiagram, FaCogs, FaUser, FaBriefcase, FaCertificate,
   FaEnvelope, FaRobot, FaSignOutAlt, FaPlus,
   FaTrash, FaEdit, FaSave, FaTimes, FaChevronDown, FaChevronUp,
-  FaExternalLinkAlt, FaHome, FaSlidersH,
+  FaExternalLinkAlt, FaHome, FaSlidersH, FaUpload, FaImage, FaFilePdf, FaSpinner,
 } from 'react-icons/fa';
 
 // ─── API Helper ──────────────────────────────────────────────────────────────
@@ -55,6 +55,101 @@ function Toast({ message, type, onClose }) {
     >
       {message}
     </motion.div>
+  );
+}
+
+// ─── File Upload Field ──────────────────────────────────────────────────────
+// uploadType: 'photos' | 'resume' | 'projects'
+function FileUploadField({ label, value, onChange, uploadType, accept, previewType = 'image' }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError('');
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch(`/api/upload?type=${uploadType}`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      onChange(data.url);
+    } catch (err) {
+      setError(err.message);
+    }
+    setUploading(false);
+    // reset input so same file can be re-uploaded
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-400 mb-1.5">{label}</label>
+      {/* URL text input */}
+      <input
+        type="text"
+        value={value || ''}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Paste URL or upload file below"
+        className="neon-input text-sm mb-2"
+      />
+      {/* Upload button */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <label
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs cursor-pointer transition-all
+            ${
+              uploading
+                ? 'border-gray-600 text-gray-500 cursor-not-allowed'
+                : 'border-neon-red/50 text-neon-red hover:bg-neon-red/10'
+            }`}
+        >
+          {uploading ? (
+            <FaSpinner className="animate-spin" size={12} />
+          ) : uploadType === 'resume' ? (
+            <FaFilePdf size={12} />
+          ) : (
+            <FaUpload size={12} />
+          )}
+          {uploading ? 'Uploading...' : 'Upload File'}
+          <input
+            type="file"
+            accept={accept}
+            className="hidden"
+            disabled={uploading}
+            ref={fileInputRef}
+            onChange={handleFileChange}
+          />
+        </label>
+        {/* Preview */}
+        {value && previewType === 'image' && (
+          <div className="w-14 h-10 rounded overflow-hidden border border-dark-600">
+            <img
+              src={value}
+              alt="preview"
+              className="w-full h-full object-cover"
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+          </div>
+        )}
+        {value && previewType === 'pdf' && (
+          <a
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-neon-red/70 hover:text-neon-red underline flex items-center gap-1"
+          >
+            <FaFilePdf size={12} /> View PDF
+          </a>
+        )}
+      </div>
+      {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+    </div>
   );
 }
 
@@ -138,13 +233,11 @@ function AboutEditor({ showToast }) {
 
   if (loading) return <p className="text-gray-500 text-sm">Loading...</p>;
 
-  const fields = [
+  const textFields = [
     { key: 'name', label: 'Full Name', type: 'text' },
     { key: 'title', label: 'Job Title', type: 'text' },
     { key: 'tagline', label: 'Tagline', type: 'text' },
     { key: 'bio', label: 'Bio', type: 'textarea' },
-    { key: 'photo_url', label: 'Photo URL', type: 'text' },
-    { key: 'resume_url', label: 'Resume URL', type: 'text' },
   ];
 
   return (
@@ -153,7 +246,7 @@ function AboutEditor({ showToast }) {
         <FaUser className="text-neon-red" size={18} /> About / Bio
       </h2>
       <div className="glass-card rounded-xl p-6 space-y-5">
-        {fields.map((f) => (
+        {textFields.map((f) => (
           <div key={f.key}>
             <label className="block text-sm font-medium text-gray-400 mb-1.5">{f.label}</label>
             {f.type === 'textarea' ? (
@@ -173,6 +266,27 @@ function AboutEditor({ showToast }) {
             )}
           </div>
         ))}
+
+        {/* Photo Upload */}
+        <FileUploadField
+          label="Profile Photo"
+          value={form.photo_url || ''}
+          onChange={(url) => setForm({ ...form, photo_url: url })}
+          uploadType="photos"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          previewType="image"
+        />
+
+        {/* Resume Upload */}
+        <FileUploadField
+          label="Resume (PDF)"
+          value={form.resume_url || ''}
+          onChange={(url) => setForm({ ...form, resume_url: url })}
+          uploadType="resume"
+          accept="application/pdf"
+          previewType="pdf"
+        />
+
         <div className="pt-2">
           <NeonButton variant="solid" onClick={handleSave} disabled={saving}>
             <FaSave className="mr-2" size={12} />
@@ -580,6 +694,18 @@ function ListManager({ tableName, label, icon: Icon, columns, emptyRow, showToas
         </select>
       );
     }
+    if (col.type === 'image-upload') {
+      return (
+        <FileUploadField
+          label=""
+          value={form[col.key] || ''}
+          onChange={(url) => setFormFn({ ...form, [col.key]: url })}
+          uploadType="projects"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          previewType="image"
+        />
+      );
+    }
     return (
       <input
         type="text"
@@ -871,7 +997,7 @@ export default function AdminDashboard({ onLogout }) {
   const projectColumns = [
     { key: 'title', label: 'Title', type: 'text' },
     { key: 'description', label: 'Description', type: 'textarea' },
-    { key: 'image_url', label: 'Image URL', type: 'text', placeholder: 'https://...' },
+    { key: 'image_url', label: 'Thumbnail Image', type: 'image-upload' },
     { key: 'live_url', label: 'Live URL', type: 'text', placeholder: 'https://...' },
     { key: 'github_url', label: 'GitHub URL', type: 'text', placeholder: 'https://github.com/...' },
     { key: 'technologies', label: 'Technologies', type: 'tags' },
