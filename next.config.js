@@ -12,7 +12,12 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'placehold.co',
       },
+      {
+        protocol: 'https',
+        hostname: 'apexisai.com',
+      },
     ],
+    unoptimized: true,
   },
   webpack: (config) => {
     config.externals = [...(config.externals || []), { canvas: 'canvas' }];
