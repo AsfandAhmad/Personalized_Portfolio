@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import NeonButton from './NeonButton';
+import { parseResumeEntries, serializeResumeEntries } from '@/lib/resumes';
 import {
   FaProjectDiagram, FaCogs, FaUser, FaBriefcase, FaCertificate,
   FaEnvelope, FaRobot, FaSignOutAlt, FaPlus,
@@ -197,6 +198,8 @@ function OverviewPanel({ counts }) {
 function AboutEditor({ showToast }) {
   const [data, setData] = useState(null);
   const [form, setForm] = useState({});
+  const [resumeEntries, setResumeEntries] = useState([]);
+  const [resumeDraft, setResumeDraft] = useState({ title: '', description: '', url: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -207,6 +210,7 @@ function AboutEditor({ showToast }) {
         const row = res.data?.[0] || null;
         setData(row);
         setForm(row || { name: '', title: '', tagline: '', bio: '', photo_url: '', resume_url: '' });
+        setResumeEntries(parseResumeEntries(row?.resume_url || ''));
       } catch (err) {
         console.error(err);
       }
@@ -218,10 +222,15 @@ function AboutEditor({ showToast }) {
   const handleSave = async () => {
     setSaving(true);
     try {
+      const payload = {
+        ...form,
+        resume_url: serializeResumeEntries(resumeEntries),
+      };
+
       if (data?.id) {
-        await api('about', 'PUT', form, data.id);
+        await api('about', 'PUT', payload, data.id);
       } else {
-        const res = await api('about', 'POST', form);
+        const res = await api('about', 'POST', payload);
         setData(res.data);
       }
       showToast('About saved successfully!', 'success');
@@ -229,6 +238,33 @@ function AboutEditor({ showToast }) {
       showToast(err.message, 'error');
     }
     setSaving(false);
+  };
+
+  const updateResumeEntry = (index, field, value) => {
+    const nextEntries = [...resumeEntries];
+    nextEntries[index] = { ...nextEntries[index], [field]: value };
+    setResumeEntries(nextEntries);
+  };
+
+  const removeResumeEntry = (index) => {
+    setResumeEntries(resumeEntries.filter((_, i) => i !== index));
+  };
+
+  const addResumeEntry = () => {
+    if (!resumeDraft.url?.trim()) {
+      showToast('Resume URL is required', 'error');
+      return;
+    }
+
+    const nextEntry = {
+      title: resumeDraft.title?.trim() || 'Resume',
+      description: resumeDraft.description?.trim() || '',
+      url: resumeDraft.url.trim(),
+    };
+
+    setResumeEntries([...resumeEntries, nextEntry]);
+    setResumeDraft({ title: '', description: '', url: '' });
+    showToast('Resume entry added', 'success');
   };
 
   if (loading) return <p className="text-gray-500 text-sm">Loading...</p>;
@@ -277,15 +313,92 @@ function AboutEditor({ showToast }) {
           previewType="image"
         />
 
-        {/* Resume Upload */}
-        <FileUploadField
-          label="Resume (PDF)"
-          value={form.resume_url || ''}
-          onChange={(url) => setForm({ ...form, resume_url: url })}
-          uploadType="resume"
-          accept="application/pdf"
-          previewType="pdf"
-        />
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="block text-sm font-medium text-gray-400">Resume Library</label>
+            <span className="text-xs text-gray-500">{resumeEntries.length} item(s)</span>
+          </div>
+
+          {resumeEntries.map((entry, index) => (
+            <div key={`${entry.url || index}`} className="rounded-lg border border-dark-600/70 bg-dark-900/40 p-4 space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1">
+                  <label className="block text-xs text-gray-500 mb-1">Title</label>
+                  <input
+                    type="text"
+                    value={entry.title || ''}
+                    onChange={(e) => updateResumeEntry(index, 'title', e.target.value)}
+                    className="neon-input text-sm"
+                    placeholder="e.g. Full Stack Resume"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeResumeEntry(index)}
+                  className="rounded-lg border border-red-500/30 p-2 text-red-400 hover:bg-red-500/10"
+                  title="Remove resume"
+                >
+                  <FaTrash size={12} />
+                </button>
+              </div>
+
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Short Description</label>
+                <input
+                  type="text"
+                  value={entry.description || ''}
+                  onChange={(e) => updateResumeEntry(index, 'description', e.target.value)}
+                  className="neon-input text-sm"
+                  placeholder="Short note about this version"
+                />
+              </div>
+
+              <FileUploadField
+                label="Resume PDF"
+                value={entry.url || ''}
+                onChange={(url) => updateResumeEntry(index, 'url', url)}
+                uploadType="resume"
+                accept="application/pdf"
+                previewType="pdf"
+              />
+            </div>
+          ))}
+
+          <div className="rounded-lg border border-dashed border-neon-red/30 p-4 space-y-3">
+            <h3 className="text-sm font-semibold text-white">Add another resume</h3>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Title</label>
+              <input
+                type="text"
+                value={resumeDraft.title}
+                onChange={(e) => setResumeDraft({ ...resumeDraft, title: e.target.value })}
+                className="neon-input text-sm"
+                placeholder="e.g. Backend Resume"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Short Description</label>
+              <input
+                type="text"
+                value={resumeDraft.description}
+                onChange={(e) => setResumeDraft({ ...resumeDraft, description: e.target.value })}
+                className="neon-input text-sm"
+                placeholder="Short note about this version"
+              />
+            </div>
+            <FileUploadField
+              label="Resume PDF"
+              value={resumeDraft.url}
+              onChange={(url) => setResumeDraft({ ...resumeDraft, url })}
+              uploadType="resume"
+              accept="application/pdf"
+              previewType="pdf"
+            />
+            <NeonButton size="sm" variant="solid" onClick={addResumeEntry}>
+              <FaPlus className="mr-1" size={10} /> Add Resume
+            </NeonButton>
+          </div>
+        </div>
 
         <div className="pt-2">
           <NeonButton variant="solid" onClick={handleSave} disabled={saving}>

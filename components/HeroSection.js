@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 import { useState, useEffect } from 'react';
 import NeonButton from './NeonButton';
 import { FaChevronDown, FaDownload, FaRocket } from 'react-icons/fa';
+import { getPrimaryResumeUrl } from '@/lib/resumes';
 
 const Hero3DScene = dynamic(() => import('./Hero3DScene'), {
   ssr: false,
@@ -21,6 +22,7 @@ export default function HeroSection({ about }) {
   ];
   const [titleIndex, setTitleIndex] = useState(0);
   const tagline = about?.tagline || 'Building scalable web applications & intelligent solutions';
+  const resumeUrl = getPrimaryResumeUrl(about?.resume_url);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -92,7 +94,7 @@ export default function HeroSection({ about }) {
             <NeonButton
               variant="secondary"
               size="lg"
-              href={about?.resume_url || '/assets/resume.pdf'}
+              href={resumeUrl}
               target="_blank"
               rel="noopener noreferrer"
             >

@@ -4,6 +4,7 @@ import { useInView } from 'react-intersection-observer';
 import SectionWrapper from './SectionWrapper';
 import { FaDownload } from 'react-icons/fa';
 import NeonButton from './NeonButton';
+import { getPrimaryResumeUrl } from '@/lib/resumes';
 
 export default function AboutSection({ about }) {
   const [ref, inView] = useInView({ threshold: 0.2, triggerOnce: true });
@@ -11,7 +12,7 @@ export default function AboutSection({ about }) {
   const name = about?.name || 'Asfand Ahmed';
   const bio = about?.bio || 'A passionate developer building amazing digital experiences.';
   const photoUrl = about?.photo_url || '/assets/profile.jpg';
-  const resumeUrl = about?.resume_url || '/assets/resume.pdf';
+  const resumeUrl = getPrimaryResumeUrl(about?.resume_url);
 
   return (
     <SectionWrapper

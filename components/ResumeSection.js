@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import SectionWrapper from './SectionWrapper';
 import NeonButton from './NeonButton';
+import { parseResumeEntries } from '@/lib/resumes';
 import { FaBriefcase, FaDownload, FaGraduationCap, FaUniversity } from 'react-icons/fa';
 
 function TimelineItem({ item, index, inView, isLast }) {
@@ -64,6 +65,8 @@ function TimelineItem({ item, index, inView, isLast }) {
 
 export default function ResumeSection({ experience = [], resumeUrl }) {
   const [ref, inView] = useInView({ threshold: 0.1, triggerOnce: true });
+  const resumes = parseResumeEntries(resumeUrl);
+  const primaryResumeUrl = resumes[0]?.url || '/assets/resume.pdf';
 
   return (
     <SectionWrapper
@@ -135,16 +138,52 @@ export default function ResumeSection({ experience = [], resumeUrl }) {
           transition={{ delay: 0.5 }}
           className="mt-16 text-center"
         >
-          <NeonButton
-            variant="solid"
-            size="lg"
-            href={resumeUrl || '/assets/resume.pdf'}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <FaDownload className="mr-2" />
-            Download Full Resume
-          </NeonButton>
+          {resumes.length > 1 ? (
+            <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                {resumes.map((resume, index) => (
+                  <a
+                    key={`${resume.url}-${index}`}
+                    href={resume.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group rounded-xl border border-neon-red/20 bg-dark-900/60 p-5 text-left transition-all hover:border-neon-red/50 hover:bg-neon-red/10"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h4 className="text-white font-semibold">{resume.title}</h4>
+                        {resume.description ? (
+                          <p className="text-sm text-gray-500 mt-1">{resume.description}</p>
+                        ) : null}
+                      </div>
+                      <FaDownload className="text-neon-red mt-1" />
+                    </div>
+                  </a>
+                ))}
+              </div>
+              <NeonButton
+                variant="solid"
+                size="lg"
+                href={primaryResumeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FaDownload className="mr-2" />
+                Download Primary Resume
+              </NeonButton>
+            </div>
+          ) : (
+            <NeonButton
+              variant="solid"
+              size="lg"
+              href={primaryResumeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FaDownload className="mr-2" />
+              Download Full Resume
+            </NeonButton>
+          )}
         </motion.div>
       </div>
     </SectionWrapper>
